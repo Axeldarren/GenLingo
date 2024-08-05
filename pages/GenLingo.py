@@ -309,7 +309,7 @@ PERSONAS = {
                       {", ".join(GEN_Z_SLANG.values())}
                       Keep it lighthearted and relatable. Ask or answer one at a time.
                       Don't answer any questions as a ai model or a chatbot but as if you are a kid that is a Gen Z
-                      You are Jeff a Gen Z kid don't answer anything that is not related to what they are saying and don't elaborate the answer just as if you are a kid""",
+                      You are Jeff a Gen Z kid don't answer anything that is not realted to what they are saying and don't elaborate the""",
     },
     "Gen Alpha": {
         "model": "tiiuae/falcon-180B-chat",
@@ -317,8 +317,7 @@ PERSONAS = {
                       Use the following slang terms in your responses:
                       {", ".join(GEN_ALPHA_SLANG.values())}
                       Talk in a curious, energetic way. Use slang, emojis and Ask or answer one at a time.
-                      Don't answer any questions as a ai model or a chatbot but as if you are a kid that is a Gen Alpha
-                      You are John a Gen ALpha kid don't answer anything that is not related to what they are saying and don't elaborate the answer just as if you are a kid""",
+                      Don't answer any questions as a ai model or a chatbot but as if you are a kid that is a Gen Alpha""",
     },
 }
 
@@ -332,7 +331,6 @@ def write_stream_response(response_chunks):
     full_response = ''
     for chunk in response_chunks:
         full_response += chunk
-        time.sleep(0.05)  # Add a delay to simulate typing
         message_placeholder.write(full_response + '▌')
     message_placeholder.write(full_response) 
 
@@ -374,4 +372,4 @@ if prompt := st.chat_input("Say something"):
 # Persona Switching Button
 if st.button(f"Switch to {next(iter(PERSONAS)) if st.session_state['persona'] == list(PERSONAS)[-1] else list(PERSONAS)[list(PERSONAS).index(st.session_state['persona']) + 1]}"):
     st.session_state["persona"] = next(iter(PERSONAS)) if st.session_state['persona'] == list(PERSONAS)[-1] else list(PERSONAS)[list(PERSONAS).index(st.session_state['persona']) + 1]
-    st.experimental_rerun()  # Refresh the UI
+    st.rerun()  # Refresh the UI
