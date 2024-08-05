@@ -1,59 +1,77 @@
 import streamlit as st
-import google.generativeai as genai
+from ai71 import AI71
 import time
+from dotenv import load_dotenv
+import os
 
-# Gemini bot
-# TODO: Change to Falcon AI
-# TODO: Change default icon and color scheme
+# Load environment variables
+load_dotenv()
+AI71_API_KEY = os.getenv("AI71_API_KEY")
+ai71_client = AI71(AI71_API_KEY)
+
 st.title("GenLingo")
 
-def write_stream_response(response):
-    # for word in stream.text.split():
-    #     yield f'{word} '
-    #     time.sleep(0.05)
+# --- Persona and Model Management ---
+PERSONAS = {
+    "Gen Z": {
+        "model": "tiiuae/falcon-180B-chat",
+        "prompt": "You are a Jeff Gen Z kid chatting with Boomers or Millennials but talk to themm as if they are your best friend and as if a Gen Z. Use slang, humor, and emojis. Keep it lighthearted and relatable. Ask or answer one at a time.",
+    },
+    "Gen Alpha": {
+        "model": "tiiuae/falcon-180B-chat",
+        "prompt": "You are John a young Gen Alpha kid chatting with Boomers or Millennials but talk to themm as if they are your best friend and as if a Gen Alpha. Use Slang such as Sigma, Aura, Gyatt, skibidi. Talk in a curious, energetic way. Use slang, emojis and Ask or answer one at a time.",
+    },
+}
+
+if "persona" not in st.session_state:
+    st.session_state["persona"] = "Gen Z"
+current_persona = PERSONAS[st.session_state["persona"]]
+
+# --- Chat UI ---
+def write_stream_response(response_chunks):
     message_placeholder = st.empty()
     full_response = ''
-    for chunk in response:
-            # Simulate stream of chunk
-            # TODO: Chunk missing `text` if API stops mid-stream ("safety"?)
-            for ch in chunk.text.split(' '):
-                full_response += ch + ' '
-                time.sleep(0.05)
-                # Rewrites with a cursor at end
-                message_placeholder.write(full_response + '▌')
-    # Write full message with placeholder
-    message_placeholder.write(full_response)
+    for chunk in response_chunks:
+        full_response += chunk
+        message_placeholder.write(full_response + '▌')
+    message_placeholder.write(full_response) 
 
-# set Google GenAI API key from streamlit secrets
-genai.configure(api_key=st.secrets["GENAI_API_KEY"])
-
-# set a default model
-if "genai_model" not in st.session_state:
-    st.session_state["genai_model"] = "gemini-1.5-flash"
-
-model = genai.GenerativeModel(st.session_state["genai_model"])
-
-# initialize chat history
+# Display chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# display chat history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# accept user input
+# Handle user input
 if prompt := st.chat_input("Say something"):
     with st.chat_message("user"):
         st.markdown(prompt)
-    
+
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # display bot response in chat message
+    # Generate response using Falcon
     with st.chat_message("assistant"):
-        response = model.generate_content(prompt)
+        messages = [{"role": "system", "content": current_persona["prompt"]},
+                    {"role": "user", "content": prompt}]
+        response_chunks = []  # List to store response chunks
+        for chunk in ai71_client.chat.completions.create(
+            messages=messages,
+            model=current_persona["model"],
+            stream=True,
+        ):
+            response_chunks.append(chunk.choices[0].delta.content or "")
+            # Add the new chunk to the list for streaming
 
-        write_stream_response(response)
-    
-    # add assistant response to chat history
-    st.session_state.messages.append({"role": "assistant", "content": response.text})
+        write_stream_response(response_chunks)  # Pass the list of chunks
+
+        # Combine the chunks into a full response
+        full_response = "".join(response_chunks)
+
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
+            
+# Persona Switching Button
+if st.button(f"Switch to {next(iter(PERSONAS)) if st.session_state['persona'] == list(PERSONAS)[-1] else list(PERSONAS)[list(PERSONAS).index(st.session_state['persona']) + 1]}"):
+    st.session_state["persona"] = next(iter(PERSONAS)) if st.session_state['persona'] == list(PERSONAS)[-1] else list(PERSONAS)[list(PERSONAS).index(st.session_state['persona']) + 1]
+    st.experimental_rerun()  # Refresh the UI
