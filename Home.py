@@ -132,4 +132,4 @@ st.button("Get Started", key="get_started", help="Sign up to start using GenLing
 st.button("Contact Us", key="contact_us", help="Get in touch with the GenLingo team")
 
 # Footer Section
-st.markdown('<div class="footer">© 2024 GenLingo. All rights reserved. | Privacy Policy | Terms of Service</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">Developed by — Samuel T. Gunawan — Axel D. Suryanto — Jeremy T. Putra — M. Noor Abdi</div>', unsafe_allow_html=True)
