@@ -1,13 +1,9 @@
 import streamlit as st
 from ai71 import AI71
 import time
-from dotenv import load_dotenv
-import os
 
-# Load environment variables
-load_dotenv()
-AI71_API_KEY = os.getenv("AI71_API_KEY")
-ai71_client = AI71(AI71_API_KEY)
+# Load AI71 API key securely using Streamlit secrets (st.secrets)
+ai71_client = AI71(st.secrets["AI71_API_KEY"])
 
 st.title("GenLingo")
 
