@@ -1,49 +1,25 @@
 import streamlit as st
+from PIL import Image
+
 
 # Set the page config
-st.set_page_config(page_title="GenLingo - Speak the Language of Tomorrow", layout="centered")
+logo = Image.open('./assets/logo-only-no-bg.png')
+st.set_page_config(page_title="GenLingo", layout="centered", page_icon=logo)
+
+logo_sidebar_style = """<style>
+    img[data-testid="stLogo"] {
+        height: 2rem !important;
+    }
+</style>"""
+
+st.markdown(logo_sidebar_style, unsafe_allow_html=True)
+st.logo("./assets/logo-with-inline-text-brightened.png", icon_image="./assets/logo-only-no-bg-brightened.png")
 
 # Custom CSS for styling
 st.markdown("""
     <style>
         .main {
             font-family: "Poppins", sans-serif;
-        }
-        a {
-            text-decoration: none;
-            color: #ccc !important;
-        }
-        .anchor {
-            position: relative;
-            bottom: 0.2em;
-        }
-        .header {
-            font-size: 3em;
-            font-weight: bold;
-            color: #ddd;
-            line-height: 1em;
-            margin-bottom: 0.5em;
-        }
-        .subheader {
-            font-size: 22px;
-            color: #6c757d;
-            margin-bottom: 2em;
-        }
-        .cta-button {
-            background-color: transparent;
-            color: white;
-            font-size: 18px;
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-align: center;
-            border: 1px solid grey;
-        }
-        .cta-button:hover {
-            border-color: #3262f0;
-            color: #3262f0 !important;
-        }
-        .cta-button a {
-            color: #ccc !important;
         }
         .feature-box {
             background-color: #243b85;
@@ -75,10 +51,34 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+button_style = """<style>
+    .stButton button {
+        font-size: 18px;
+        padding: 10px 20px;
+        border-radius: 5px;
+    }
+                           
+    .stButton button:hover, .stButton button:focus {
+        border-color: #3262f0 !important;
+        color: #3262f0 !important;
+    }
+
+    .stButton button:active {
+        color: #fff !important;
+        background: #3262f0 !important;
+    }
+</style>"""
+
+st.markdown(button_style, unsafe_allow_html=True)
+
 # Hero Section
-st.markdown('<div class="header">Master the Language of Tomorrow with GenLingo</div>', unsafe_allow_html=True)
-st.markdown('<div class="subheader">Unlock the latest trends in communication and stay connected with the next generations.</div>', unsafe_allow_html=True)
-st.markdown('<a href="#utg" class="cta-button">See How It Works</a>', unsafe_allow_html=True)
+st.markdown('# Master the Language of Tomorrow with :blue[GenLingo]')
+st.markdown('### :grey[Unlock the latest trends in communication and stay connected with the next generations.]')
+if st.button("Try GenLingo Now!", key="gl-bot-cta1", help="Start using GenLingo"):
+    st.switch_page("./pages/1_GenLingo.py")
+
+if st.button("Search the Encyclopedia", key="ency-cta1", help="Look up the definition of a slang"):
+    st.switch_page("./pages/2_Encyclopedia.py")
 
 # About Section
 st.markdown("## What is GenLingo?")
@@ -98,7 +98,6 @@ col3.markdown('<div class="feature-box"><div class="feature-title">Educational I
 col4.markdown('<div class="feature-box"><div class="feature-title">Cultural Bridge</div><div class="feature-description">Facilitate better communication between different generations.</div></div>', unsafe_allow_html=True)
 
 # Demographics Section
-st.markdown('<div class="anchor" id="utg"></div>', unsafe_allow_html=True)
 st.markdown("## Understanding the Generations")
 st.markdown("""
 - **Gen Z (born 1997-2012):** Represents about 20% of the global population. Known for their strong presence on platforms like TikTok and Instagram, and their inclination towards social activism and mental health awareness.
@@ -128,8 +127,11 @@ By using GenLingo, you can reduce communication barriers, helping to alleviate s
 
 # Call-to-Action Section
 st.markdown("## Ready to Connect Across Generations?")
-st.button("Get Started", key="get_started", help="Sign up to start using GenLingo")
-st.button("Contact Us", key="contact_us", help="Get in touch with the GenLingo team")
+if st.button("Try GenLingo Now!", key="gl-bot-cta2", help="Start using GenLingo"):
+    st.switch_page("./pages/1_GenLingo.py")
+
+if st.button("Search the Encyclopedia", key="ency-cta2", help="Look up the definition of a slang"):
+    st.switch_page("./pages/2_Encyclopedia.py")
 
 # Footer Section
 st.markdown('<div class="footer">Developed by — Samuel T. Gunawan — Axel D. Suryanto — Jeremy T. Putra — M. Noor Abdi</div>', unsafe_allow_html=True)
