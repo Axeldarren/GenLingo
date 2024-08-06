@@ -27,6 +27,12 @@ text_search = st.text_input("Search slangs by name", value="")
 mask = slangs.str.contains(text_search.lower())
 df_search = df[mask]
 
+if df_search.empty:
+    st.markdown(f"### Sorry, there are currently no slangs with :blue[{text_search}] in our Encyclopedia 🙏")
+    st.markdown("Refer to our :blue[GenLingo Bot] for the latest update on Gen Z and Gen Alpha language.")
+    if st.button('Chat with GenLingo Bot'):
+        st.switch_page('./pages/1_GenLingo.py')
+
 # Dsiplay neatly with cards (3 per row)
 N_cards_per_row = 3
 if text_search:
