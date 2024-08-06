@@ -87,6 +87,9 @@ GenLingo is a smart chatbot designed to help you learn and engage with the ever-
 Perfect for parents, teachers, and anyone looking to stay connected with the latest trends.
 """)
 
+# Disclaimer
+st.markdown("***:orange[:material/warning:  Note:] GenLingo is currently in development and is considered an experimental AI. It is still in the works and not yet fully developed. We appreciate your feedback to help us improve!***")
+
 # Key Features Section
 st.markdown("## Why Choose GenLingo?")
 col1, col2 = st.columns(2)
