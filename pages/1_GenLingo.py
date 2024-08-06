@@ -15,7 +15,7 @@ st.logo("./assets/logo-with-inline-text-brightened.png", icon_image="./assets/lo
 # Load AI71 API key securely using Streamlit secrets (st.secrets)
 ai71_client = AI71(st.secrets["AI71_API_KEY"])
 
-st.title("GenLingo")
+st.title(":blue[GenLingo]")
 
 # --- Persona and Model Management ---
 GEN_Z_SLANG = {
