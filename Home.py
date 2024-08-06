@@ -86,7 +86,6 @@ st.markdown("""
 GenLingo is a smart chatbot designed to help you learn and engage with the ever-evolving slang and language styles of Gen Z and Gen Alpha. 
 Perfect for parents, teachers, and anyone looking to stay connected with the latest trends.
 """)
-st.image("https://via.placeholder.com/600x300.png", caption="Chatbot interface showing different modes for Gen Z and Gen Alpha")
 
 # Key Features Section
 st.markdown("## Why Choose GenLingo?")
