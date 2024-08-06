@@ -88,7 +88,7 @@ Perfect for parents, teachers, and anyone looking to stay connected with the lat
 """)
 
 # Disclaimer
-st.markdown("***:orange[:material/warning:  Note:] GenLingo is currently in development and is considered an experimental AI. It is still in the works and not yet fully developed. We appreciate your feedback to help us improve!***")
+st.markdown("***:orange[Note:] GenLingo is currently in development and is considered an experimental AI. It is still in the works and not yet fully developed. We appreciate your feedback to help us improve!***")
 
 # Key Features Section
 st.markdown("## Why Choose GenLingo?")
