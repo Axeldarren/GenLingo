@@ -1,6 +1,7 @@
 import streamlit as st
 from ai71 import AI71
 from Home import button_style, logo
+import time
 
 st.set_page_config(page_title="GenLingo Bot", layout="centered", page_icon=logo)
 st.markdown(button_style, unsafe_allow_html=True)
@@ -337,6 +338,7 @@ def write_stream_response(response_chunks):
     full_response = ''
     for chunk in response_chunks:
         full_response += chunk
+        time.sleep(0.05)
         message_placeholder.write(full_response + '▌')
     message_placeholder.write(full_response) 
 
@@ -378,4 +380,11 @@ if prompt := st.chat_input("Say something"):
 # Persona Switching Button
 if st.button(f"Switch to {next(iter(PERSONAS)) if st.session_state['persona'] == list(PERSONAS)[-1] else list(PERSONAS)[list(PERSONAS).index(st.session_state['persona']) + 1]}"):
     st.session_state["persona"] = next(iter(PERSONAS)) if st.session_state['persona'] == list(PERSONAS)[-1] else list(PERSONAS)[list(PERSONAS).index(st.session_state['persona']) + 1]
+    st.rerun()  # Refresh the UI
+
+# --- Clear Messages Button ---
+if st.button("Clear Messages"):
+    # Clear chat history in session state
+    st.session_state.messages = []
+    
     st.rerun()  # Refresh the UI
