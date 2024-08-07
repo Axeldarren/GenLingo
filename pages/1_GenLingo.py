@@ -398,6 +398,7 @@ if prompt := st.chat_input("Say something"):
 # Persona Switching Button
 if st.button(f"Switch to {next(iter(PERSONAS)) if st.session_state['persona'] == list(PERSONAS)[-1] else list(PERSONAS)[list(PERSONAS).index(st.session_state['persona']) + 1]}"):
     st.session_state["persona"] = next(iter(PERSONAS)) if st.session_state['persona'] == list(PERSONAS)[-1] else list(PERSONAS)[list(PERSONAS).index(st.session_state['persona']) + 1]
+    st.session_state.messages = []  # Clear chat history
     st.rerun()  # Refresh the UI
 
 # --- Clear Messages Button ---
