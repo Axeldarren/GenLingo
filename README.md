@@ -50,5 +50,15 @@ To run this project locally, you need to have the following software installed:
    ```
    This launches the GenLingo app in your browser.
 
+## Light Mode
+![gen-lingo streamlit app_GenLingo (2)](https://github.com/user-attachments/assets/c20a8859-1410-4907-9e49-bf962eb64ba9)
+![gen-lingo streamlit app_GenLingo (3)](https://github.com/user-attachments/assets/fb194bbc-5a28-4022-bee6-582a500ee31f)
+![gen-lingo streamlit app_GenLingo (4)](https://github.com/user-attachments/assets/dd9aab63-dae9-4862-bfdc-e0f5368ddf0c)
+
+## Dark Mode
+![gen-lingo streamlit app_GenLingo (5)](https://github.com/user-attachments/assets/48ad308b-e35f-4122-ba80-4e21d0e24bf6)
+![gen-lingo streamlit app_GenLingo (6)](https://github.com/user-attachments/assets/91a4bd7c-f005-4064-a73c-a6aa071fe210)
+![gen-lingo streamlit app_GenLingo (7)](https://github.com/user-attachments/assets/ef964037-d669-43a6-bf71-bf059bfd2518)
+
 ## Credits
 **Developers:** Samuel T. Gunawan, Axel D. Suryanto, Jeremy T. Putra, M. Noor Abdi
