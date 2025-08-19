@@ -1,7 +1,21 @@
+# --- Single-turn system instruction mode ---
+from google.genai import types
+
+def single_turn_with_system_instruction(prompt, persona_prompt):
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        config=types.GenerateContentConfig(system_instruction=persona_prompt),
+        contents=prompt
+    )
+    st.markdown(f"**System instruction:** {persona_prompt}")
+    st.markdown(f"**User:** {prompt}")
+    st.markdown(f"**Gemini:** {response.text}")
 import streamlit as st
-from ai71 import AI71
+from google import genai
 from Home import button_style, logo
 import time
+
+import pandas as pd
 
 st.set_page_config(page_title="GenLingo Bot", layout="centered", page_icon=logo)
 st.markdown(button_style, unsafe_allow_html=True)
@@ -13,398 +27,172 @@ logo_sidebar_style = """<style>
 st.markdown(logo_sidebar_style, unsafe_allow_html=True)
 st.logo("./assets/logo-with-inline-text-brightened.png", icon_image="./assets/logo-only-no-bg-brightened.png")
 
-# Load AI71 API key securely using Streamlit secrets (st.secrets)
-ai71_client = AI71(st.secrets["AI71_API_KEY"])
 
+# Load Gemini API Key and create client
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+
+
+# Helper to create Gemini chat and send persona prompt as first message
+def create_gemini_chat(persona_prompt):
+    chat = client.chats.create(model="gemini-2.5-flash")
+    chat.send_message(persona_prompt)
+    return chat
+
+
+# Load AI71 API key securely using Streamlit secrets (st.secrets)
 st.title(":blue[GenLingo]")
 
+
 # --- Persona and Model Management ---
-GEN_Z_SLANG = {
-    "Aesthetic": "Pleasing to the eye",
-    "Bae": "Significant other",
-    "Bet": "Agreement or challenge",
-    "Big mad": "Very angry",
-    "Big mood": "Strongly relatable feeling",
 
-    "Boujee": "Luxurious or fancy",
-    "Cancelled": "Rejected or boycotted",
-    "Chug": "Drink quickly",
-    "Clout": "Influence or fame",
-    "Curve": "Reject someone's advances",
-
-    "Dead": "Extremely funny",
-    "Extra": "Over the top",
-    "Fam": "Close friends or family",
-    "Finsta": "Fake Instagram account",
-    "Fit": "Outfit",
-
-    "Flex": "Show off",
-    "FOMO": "Fear of Missing Out",
-    "Ghost": "Disappear or ignore",
-    "Glow up": "Major transformation",
-    "Gucci": "Good or cool",
-
-    "High-key": "Openly or obviously",
-    "Hits different": "A unique or special feeling",
-    "Hundo P": "100 percent, absolutely",
-    "I can't even": "Overwhelmed or speechless",
-    "I'm dead": "It's so funny I'm \"dead\"",
-
-    "It's the ____ for me": "Pointing out something noteworthy",
-    "Juiced": "Excited or hyped",
-    "Karen": "Entitled or demanding woman",
-    "Keep it 100": "Be honest",
-    "Kiki": "A party or gathering",
-
-    "Left on read": "Ignored after reading a message",
-    "Low-key": "Secretly or moderately",
-    "Main character": "Person who stands out",
-    "Mood": "A relatable feeling",
-    "No cap": "No lie, for real",
-
-    "On God": "I swear",
-    "On point": "Perfectly executed",
-    "Periodt": "End of discussion, definitive",
-    "Ratioed": "More dislikes than likes",
-    "Receipts": "Proof or evidence",
-
-    "Salty": "Bitter or upset",
-    "Say less": "Understood",
-    "Ship": "Support a romantic relationship",
-    "Simp": "Overly attentive to someone",
-    "Skrt": "Sound of tires screeching; stop",
-
-    "Slaps": "Sounds good (especially music)",
-    "Slide into DMs": "Privately message someone",
-    "Snack": "Attractive person",
-    "Spill the tea": "Share the gossip",
-    "Stan": "Overzealous fan",
-
-    "Swerve": "Avoid or dodge",
-    "Thirst trap": "Flirtatious photo",
-    "Throw shade": "Subtly insult or criticize",
-    "TFW": "That Feeling When",
-    "Vibe check": "Assess someone's mood or personality",
-
-    "Wack": "Lame or bad",
-    "Wavy": "Cool or chill",
-    "Woke": "Socially aware",
-    "Yeet": "To throw with force",
-    "Yikes": "Expression of shock or concern",
-
-    "Zoomies": "Sudden burst of energy",
-    "Vibes": "Feelings, atmosphere",
-    "Secure the bag": "Obtain something valuable",
-    "Slay": "To do something exceptionally well",
-    "TBT": "Throwback Thursday",
-
-    "Cap": "Lie or falsehood",
-    "Dope": "Cool or awesome",
-    "Shook": "Shocked or surprised",
-    "Snatched": "Looking good or stylish",
-    "Thicc": "Curvaceous or full-figured",
-
-    "Goat": "Greatest of All Time",
-    "Ratchet": "Unrefined or uncouth",
-    "Tea": "Gossip",
-    "AF": "Intensifier (e.g., cool AF)",
-    "Basic": "Unoriginal or mainstream",
-
-    "W": "Win or success",
-    "Drip": "Stylish or fashionable attire",
-    "Big oof": "Big mistake or awkward situation",
-    "Bop": "Good song",
-    "Cray": "Crazy",
-
-    "Dank": "High quality or excellent",
-    "Deadass": "Seriously or truly",
-    "Facts": "True statement",
-    "Finesse": "Skillfully handle",
-    "Fire": "Awesome or amazing",
-
-    "Glow up": "Significant improvement",
-    "Hits different": "Feels unique or special",
-    "Hype": "Excitement",
-    "I can't even": "Overwhelmed",
-    "JOMO": "Joy of Missing Out",
-
-    "Karen": "Entitled person",
-    "Lit": "Exciting or fun",
-    "No cap": "No lie",
-    "Periodt": "End of discussion",
-    "Pog": "Impressive achievement",
-
-    "Shooketh": "Extremely shocked",
-    "Slaps": "Sounds good",
-    "Thirsty": "Desperate for attention",
-    "Trash": "Bad or low quality",
-    "Vibing": "Enjoying the atmosphere",
-
-    "Wig snatched": "Amazed or impressed",
-    "YOLO": "You Only Live Once",
-    "Aura": "It means having everybody's energy and attention. It has an alluring pull to you. (Usually have a counter the more aure the cooler you are example 10000000 aura if your aura get minus you did soemthing thats not cool or embrassing)",
-    "Sigma": "Independent, non-conformist",
-    "Hundo P": "100 percent certain",
-
-    "Gucci": "Very good, excellent",
-    "Big yikes": "Extremely embarrassing",
-    "Bops": "Good songs",
-    "Cancelled": "Rejected or dismissed",
-    "Clout chasing": "Seeking fame or influence",
-
-    "Extra": "Over the top, dramatic",
-    "Glow up": "Transform for the better",
-    "Mood": "A feeling or vibe",
-    "Savage": "Fierce, bold",
-    "Sksksk": "Expression of laughter or excitement",
-
-    "Slaps": "Really good, especially in music",
-    "Stan": "Overly enthusiastic fan",
-    "W": "Win, success",
-    "Wig": "Shocked, impressed",
-    "Zaddy": "Attractive man",
-
-    "Drip": "Stylish or fashionable",
-    "High-key": "Openly, obviously",
-    "Low-key": "Secretly, moderately",
-    "Shook": "Shocked, surprised",
-    "Sus": "Suspicious, suspect",
-
-    "Lit": "Exciting, fun",
-    "Noob": "Newbie, beginner",
-    "Roast": "Tease, criticize",
-    "Salty": "Bitter, upset",
-    "Slay": "Succeed, excel",
-
-    "Tea": "Gossip, news",
-    "Thicc": "Full-figured, curvaceous",
-    "Extra": "Over the top, dramatic",
-    "Fit": "Outfit",
-    "Flex": "Show off, boast",
-
-    "FOMO": "Fear of Missing Out",
-    "GOAT": "Greatest of All Time",
-    "Left on read": "Ignored after seeing a message",
-    "No chill": "Unrestrained, wild",
-    "OTP": "One True Pairing (favorite fictional couple)",
-
-    "Trolling": "Intentionally provoking others online"
-}
-
-GEN_ALPHA_SLANG = {
-    "Bet": "Agreement or affirmation (similar to \"Okay\" or \"Got it\")",
-    "Cap": "Lie or falsehood (e.g., \"No cap\" means \"No lie\")",
-    "Drip": "Stylish or fashionable attire",
-    "Flex": "To show off or boast",
-    "Glow up": "A significant transformation or improvement in appearance or skills",
-
-    "GOAT": "Greatest Of All Time",
-    "Lit": "Exciting or enjoyable",
-    "Noob": "A beginner or someone inexperienced",
-    "Salty": "Bitter or upset",
-    "Savage": "Bold or unfiltered",
-
-    "Ship": "To support a romantic relationship (real or fictional)",
-    "Slay": "To do something exceptionally well",
-    "Sus": "Suspicious or questionable",
-    "Tea": "Gossip or information",
-        "Woke": "Socially aware or conscious",
-
-    "Yeet": "To throw something forcefully",
-    "Zoomer": "Member of Generation Z or Alpha",
-    "Bop": "A good or catchy song",
-    "Boujee": "Luxurious or high-class",
-    "Clout": "Influence or popularity",
-
-    "Cringe": "Embarrassing or awkward",
-    "Dank": "High quality, especially in relation to memes",
-    "Dope": "Cool or awesome",
-    "Extra": "Over the top or dramatic",
-    "Fire": "Amazing or excellent",
-
-    "Ghost": "To suddenly stop communicating with someone",
-    "Hype": "Excitement or promotion",
-    "Kicks": "Shoes, particularly sneakers",
-    "Litty": "Very exciting or fun",
-    "Low-key": "Quietly or subtly",
-
-    "Mood": "Relatable feeling or situation",
-    "OG": "Original or authentic",
-    "On fleek": "Perfect or on point",
-    "Roast": "To humorously insult or criticize",
-    "Shade": "Subtle disrespect or criticism",
-
-    "Shook": "Surprised or shaken up",
-    "Swole": "Muscular or physically fit",
-    "Gyatt": "Having a curvy figure",
-    "Throwing shade": "Subtly insulting or criticizing",
-    "Vibe": "Atmosphere or feeling",
-
-    "Whip": "Car",
-    "Yass": "Enthusiastic agreement or approval",
-    "Zaddy": "Attractive and stylish man",
-    "Bae": "Significant other, romantic partner",
-    "Banger": "A great song or hit",
-
-    "Clutch": "Performing well under pressure",
-    "Dank meme": "A high-quality or particularly funny meme",
-    "Deadass": "Seriously or truly",
-    "Finesse": "To handle a situation with skill and cleverness",
-    "Gucci": "Good, okay, or cool",
-
-    "High-key": "Openly or without reservation",
-    "JOMO": "Joy of Missing Out (opposite of FOMO)",
-    "Karen": "Stereotype of an entitled and demanding woman",
-    "Lit AF": "Extremely exciting or fun",
-    "No cap": "No lie or exaggeration",
-
-    "OTP": "One True Pairing (favorite fictional couple)",
-    "Pog": "Expression of excitement or amazement",
-    "Receipts": "Proof or evidence",
-    "Shooketh": "Extremely shocked or surprised",
-    "Slaps": "Sounds good (usually about music)",
-
-    "Stan": "An obsessive or dedicated fan",
-    "Tea spill": "To share gossip or secrets",
-    "Thirsty": "Desperately seeking attention or validation",
-    "Trash": "Bad or low quality",
-    "Trolling": "Deliberately provoking or antagonizing others online",
-
-    "Vibing": "Relaxing or enjoying oneself",
-    "W": "Win or victory",
-    "Wig snatched": "Amazed or impressed to the point of being speechless",
-    "YOLO": "You Only Live Once",
-    "Af": "Intensifier (e.g., lit af means very lit)",
-
-    "Big yikes": "Expression of extreme awkwardness or embarrassment",
-    "Chill": "Relaxed or easygoing",
-    "Fam": "Close friends or family",
-    "FOMO": "Fear of Missing Out",
-    "Hundo P": "One hundred percent, completely",
-
-    "I can't even": "Overwhelmed or unable to deal with a situation",
-    "Legit": "Legitimate or real",
-    "No chill": "Lacking restraint or self-control",
-    "Savage AF": "Extremely bold or harsh",
-    "Simp": "Someone who is overly eager to please another person",
-
-    "Squad": "Group of friends",
-    "Thirst trap": "Provocative photo posted to attract attention",
-    "Throw shade": "Make an indirect or subtle insult",
-    "TFW": "That Feeling When",
-    "Wig": "To be surprised or amazed",
-
-    "Big mood": "A feeling or situation that is relatable",
-    "Aura": "It means having everybody's energy and attention. It has an alluring pull to you. (Usually have a counter the more aure the cooler you are example 10000000 aura if your aura get minus you did soemthing thats not cool or embrassing)",
-    "Sigma": "A person who is self-sufficient and independent of social conventions",
-    "Bops": "Good songs",
-    "Cancelled": "Boycotted or ostracized due to offensive behavior or opinions",
-
-    "Clout chasing": "The act of seeking fame or influence",
-    "Periodt": "Emphasizes the finality of a statement",
-    "Sksksk": "Expression of excitement or laughter",
-    "Vibes": "A person's emotional state or the atmosphere of a place"
-
-}
+# --- Optimized CSV loading with Streamlit cache ---
+@st.cache_data(show_spinner=False)
+def load_slang_dicts():
+    genz_df = pd.read_csv("../Gen_Z_slang_data.csv", sep=';')
+    genalpha_df = pd.read_csv("../Gen_Alpha_Dataset_Slang.csv", sep=';')
+    return (
+        dict(zip(genz_df['Slang'], genz_df['Meaning'])),
+        dict(zip(genalpha_df['Slang'], genalpha_df['Meaning']))
+    )
+GEN_Z_SLANG, GEN_ALPHA_SLANG = load_slang_dicts()
 
 
-PERSONAS = {
-    "Gen Z": {
-        "model": "tiiuae/falcon-180B-chat",
-        "prompt": f"""You are Zoey, a 16-year-old Gen Z kid. You're chatting with adults who want to practice talking like Gen Z. Keep it super chill and relatable. ✌️
 
-                      Here's how you roll:
-                        Current Trends: Reference popular Gen Z things like TikTok challenges, memes, music artists, and influencers. 
-                        Abbreviations and Acronyms:  Use "rn" for "right now," "tbh" for "to be honest," "af" as an intensifier, and other common Gen Z abbreviations.
-                        Casual Tone:  Be laid-back, friendly, and use informal language. Avoid being overly formal or using big words.
-                        Express Yourself:  Share your opinions and feelings openly, just like a real teenager would.
-                        Listen and Respond: Pay close attention to what the adult says and respond appropriately. If they talk about school, ask them about their classes or teachers. If they change the subject, follow along and avoid repeating yourself.
-                        Variety is Key: Avoid using the same phrases or responses over and over. Switch things up and keep the conversation interesting!
-                        Contextual Responses: If the adult mentions a specific topic, ask follow-up questions or share your thoughts on that topic. Don't just say "What's up?" unless it's relevant to the conversation.
-                        Relatable Topics: Talk about things Gen Z cares about, like school, social media, relationships, hobbies, or even just random thoughts.
-                        Slang Master: Throw in some emojis for good measure. 😉
-                                      Use the following slang terms in your responses:
-                                      {", ".join(GEN_Z_SLANG.values())}
-                       Remember, you're not just a chatbot; you're Zoey, a Gen Z kid who loves to chat and share the latest trends. Let's have some fun! 😎""",
-    },
-    "Gen Alpha": {
-        "model": "tiiuae/falcon-180B-chat",
-        "prompt": f"""You are Max, a 10-year-old Gen Alpha kid. Adults want to learn how to talk to kids your age, so chat with them like you would with your friends. 
+# --- Cache persona prompts for speed ---
+@st.cache_data(show_spinner=False)
+def get_personas(genz_slang, genalpha_slang):
+        return {
+                "Gen Z": {
+                        "model": "gemini-2.5-flash",
+                        "prompt": f"""You are Zoey, a 16-year-old Gen Z kid. You're chatting with adults who want to practice talking like Gen Z. Keep it super chill and relatable. ✌️
 
-                      Here's how you'll make it happen:
+Instructions for your first response:
+- Greet the user in a friendly, casual Gen Z way (e.g., "Heyyy! What's up?" or "Yo, how's it going?").
+- Give a quick example of how you use Gen Z slang in a sentence, and invite the user to chat or ask about slang.
+- Use emojis and at least 2-3 different slang terms from the list below in your greeting.
 
-                        Gamer Lingo:  Use gaming slang like "noob," "poggers," "sus," "gg" (good game), and talk about popular video games or online worlds. 🎮
-                        Short and Sweet: Keep your sentences short, simple, and playful. Use lots of emojis and exclamation marks! 🤩
-                        Curious and Energetic:  Be enthusiastic and ask lots of questions about what the adult is interested in.
-                        Pop Culture References: Mention popular YouTubers, cartoons, toys, or trends that Gen Alpha kids love.
-                        Creative and Imaginative: Let your imagination run wild and share your ideas and stories. 🎨
-                        Listen and Respond: Pay attention to what the adult says and respond in a way that makes sense. If they talk about school, share your favorite subject or something funny that happened in class.
-                        Don't Repeat Yourself: Avoid using the same greetings or responses over and over. Try different things to keep the conversation exciting!
-                        Relatable Topics: Talk about things Gen Alpha kids care about, like school, friends, games, favorite YouTubers, or even just silly things that make you laugh.
-                         Slang Lingo:  Use the following slang terms in your responses: mostly sigma, aura, skibidi, and other Gen Alpha slang.
-                                      {", ".join(GEN_ALPHA_SLANG.values())}
-                        Remember, you're Max, a Gen Alpha kid who's excited to chat and have fun! Let's get this conversation started! 🚀""",
-    },
-}
+General persona rules for all responses:
+- Reference popular Gen Z things like TikTok challenges, memes, music artists, and influencers.
+- Use abbreviations and acronyms: "rn" for "right now," "tbh" for "to be honest," "af" as an intensifier, and other common Gen Z abbreviations.
+- Be laid-back, friendly, and use informal language. Avoid being overly formal or using big words.
+- Share your opinions and feelings openly, just like a real teenager would.
+- Pay close attention to what the adult says and respond appropriately. If they talk about school, ask them about their classes or teachers. If they change the subject, follow along and avoid repeating yourself.
+- Avoid using the same phrases or responses over and over. Switch things up and keep the conversation interesting!
+- If the adult mentions a specific topic, ask follow-up questions or share your thoughts on that topic. Don't just say "What's up?" unless it's relevant to the conversation.
+- Talk about things Gen Z cares about, like school, social media, relationships, hobbies, or even just random thoughts.
+- Throw in some emojis for good measure. 😉
+- Use the following slang terms in your responses:
+    {', '.join(genz_slang.values())}
+
+Remember, you're not just a chatbot; you're Zoey, a Gen Z kid who loves to chat and share the latest trends. Let's have some fun! 😎""",
+                },
+                "Gen Alpha": {
+                        "model": "gemini-2.5-flash",
+                        "prompt": f"""You are Max, a 10-year-old Gen Alpha kid. Adults want to learn how to talk to kids your age, so chat with them like you would with your friends. 
+
+Instructions for your first response:
+- Greet the user in a playful, energetic way (e.g., "Yo! Ready to vibe?" or "Hey hey! Wanna talk about games or memes?").
+- Give a quick example of how you use Gen Alpha slang in a sentence, and invite the user to chat or ask about slang or games.
+- Use emojis and at least 2-3 different slang terms from the list below in your greeting.
+
+General persona rules for all responses:
+- Use gaming slang like "noob," "poggers," "sus," "gg" (good game), and talk about popular video games or online worlds. 🎮
+- Keep your sentences short, simple, and playful. Use lots of emojis and exclamation marks! 🤩
+- Be enthusiastic and ask lots of questions about what the adult is interested in.
+- Mention popular YouTubers, cartoons, toys, or trends that Gen Alpha kids love.
+- Let your imagination run wild and share your ideas and stories. 🎨
+- Pay attention to what the adult says and respond in a way that makes sense. If they talk about school, share your favorite subject or something funny that happened in class.
+- Avoid using the same greetings or responses over and over. Try different things to keep the conversation exciting!
+- Talk about things Gen Alpha kids care about, like school, friends, games, favorite YouTubers, or even just silly things that make you laugh.
+- Use the following slang terms in your responses: mostly sigma, aura, skibidi, and other Gen Alpha slang.
+    {', '.join(genalpha_slang.values())}
+
+Remember, you're Max, a Gen Alpha kid who's excited to chat and have fun! Let's get this conversation started! 🚀""",
+                },
+        }
+PERSONAS = get_personas(GEN_Z_SLANG, GEN_ALPHA_SLANG)
 
 if "persona" not in st.session_state:
     st.session_state["persona"] = "Gen Z"
 current_persona = PERSONAS[st.session_state["persona"]]
 
 # --- Chat UI ---
-def write_stream_response(response_chunks):
+# Ensure gemini_chat is always initialized before use
+if "gemini_chat" not in st.session_state or st.session_state["gemini_chat"] is None:
+    st.session_state["gemini_chat"] = create_gemini_chat(PERSONAS[st.session_state.get("persona", "Gen Z")]["prompt"])
+
+# Streaming Gemini response
+def write_stream_response_streaming(response_stream):
     message_placeholder = st.empty()
     full_response = ''
-    for chunk in response_chunks:
-        full_response += chunk
-        time.sleep(0.05)
-        message_placeholder.write(full_response + '▌')
-    message_placeholder.write(full_response) 
+    for chunk in response_stream:
+        # Stream word by word for a more natural typing effect
+        words = chunk.text.split()
+        for i, word in enumerate(words):
+            if full_response:
+                full_response += ' '
+            full_response += word
+            time.sleep(0.06)  # Typing feel, a bit slower for word-by-word
+            message_placeholder.write(full_response + '▌')
+    message_placeholder.write(full_response)
 
-# Display chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
 
-# Handle user input
+# Show Gemini chat history (user/model turns, skip system/prompt engineering, merge consecutive assistant messages)
+if st.session_state.get("gemini_chat"):
+    history = st.session_state["gemini_chat"].get_history()
+    # Skip the first message if it's the system prompt (persona prompt)
+    start_idx = 1 if history and history[0].role == "user" and history[0].parts[0].text.strip() == current_persona["prompt"].strip() else 0
+    merged_history = []
+    prev_role = None
+    buffer = ""
+    for message in history[start_idx:]:
+        if message.role == "model":
+            if prev_role == "model":
+                buffer += message.parts[0].text
+            else:
+                if prev_role is not None:
+                    merged_history.append((prev_role, buffer))
+                buffer = message.parts[0].text
+                prev_role = "model"
+        elif message.role == "user":
+            if prev_role is not None:
+                merged_history.append((prev_role, buffer))
+            buffer = message.parts[0].text
+            prev_role = "user"
+    if prev_role is not None:
+        merged_history.append((prev_role, buffer))
+
+    for role, text in merged_history:
+        if role == "user":
+            with st.chat_message("user"):
+                st.markdown(text)
+        elif role == "model":
+            with st.chat_message("assistant"):
+                st.markdown(text)
+
+# --- Chat input for multi-turn chat streaming only ---
 if prompt := st.chat_input("Say something"):
     with st.chat_message("user"):
         st.markdown(prompt)
-
-    st.session_state.messages.append({"role": "user", "content": prompt})
-
-    # Generate response using Falcon
     with st.chat_message("assistant"):
-        messages = [{"role": "system", "content": current_persona["prompt"]},
-                    {"role": "user", "content": prompt}]
-        response_chunks = []  # List to store response chunks
-        for chunk in ai71_client.chat.completions.create(
-            messages=messages,
-            model=current_persona["model"],
-            stream=True,
-        ):
-            response_chunks.append(chunk.choices[0].delta.content or "")
-            # Add the new chunk to the list for streaming
-
-        write_stream_response(response_chunks)  # Pass the list of chunks
-
-        # Combine the chunks into a full response
-        full_response = "".join(response_chunks)
-
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
-            
+        response_stream = st.session_state["gemini_chat"].send_message_stream(prompt)
+        write_stream_response_streaming(response_stream)
 # Persona Switching Button
-if st.button(f"Switch to {next(iter(PERSONAS)) if st.session_state['persona'] == list(PERSONAS)[-1] else list(PERSONAS)[list(PERSONAS).index(st.session_state['persona']) + 1]}"):
-    st.session_state["persona"] = next(iter(PERSONAS)) if st.session_state['persona'] == list(PERSONAS)[-1] else list(PERSONAS)[list(PERSONAS).index(st.session_state['persona']) + 1]
-    st.session_state.messages = []  # Clear chat history
+persona_names = list(PERSONAS.keys())
+current_idx = persona_names.index(st.session_state["persona"])
+next_idx = (current_idx + 1) % len(persona_names)
+if st.button(f"Switch to {persona_names[next_idx]}"):
+    st.session_state["persona"] = persona_names[next_idx]
+    # Recreate Gemini chat with new persona system prompt
+    st.session_state["gemini_chat"] = create_gemini_chat(PERSONAS[persona_names[next_idx]]["prompt"])
+    st.toast(f"Switched to {persona_names[next_idx]} persona!", icon="🔄")
     st.rerun()  # Refresh the UI
 
 # --- Clear Messages Button ---
 if st.button("Clear Messages"):
-    # Clear chat history in session state
-    st.session_state.messages = []
-    
+    # Clear Gemini chat history only, keep current persona
+    if st.session_state.get("gemini_chat"):
+        st.session_state["gemini_chat"] = create_gemini_chat(PERSONAS[st.session_state["persona"]]["prompt"])
+    st.toast("Chat history cleared!", icon="🧹")
     st.rerun()  # Refresh the UI
