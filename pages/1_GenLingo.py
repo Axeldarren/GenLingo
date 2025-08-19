@@ -48,8 +48,8 @@ st.title(":blue[GenLingo]")
 # --- Optimized CSV loading with Streamlit cache ---
 @st.cache_data(show_spinner=False)
 def load_slang_dicts():
-    genz_df = pd.read_csv("GenLingo/dataset/Gen_Z_slang_data.csv", sep=';')
-    genalpha_df = pd.read_csv("GenLingo/dataset/Gen_Alpha_Dataset_Slang.csv", sep=';')
+    genz_df = pd.read_csv("dataset/Gen_Z_slang_data.csv", sep=';')
+    genalpha_df = pd.read_csv("dataset/Gen_Alpha_Dataset_Slang.csv", sep=';')
     return (
         dict(zip(genz_df['Slang'], genz_df['Meaning'])),
         dict(zip(genalpha_df['Slang'], genalpha_df['Meaning']))
