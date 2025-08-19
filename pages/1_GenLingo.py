@@ -166,6 +166,8 @@ if prompt := st.chat_input("Say something"):
         full_response = ""
         message_placeholder = st.empty()
         for chunk in response_stream:
+            if not getattr(chunk, "text", None):
+                continue
             words = chunk.text.split()
             for i, word in enumerate(words):
                 if full_response:
