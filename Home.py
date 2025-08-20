@@ -2,9 +2,9 @@ import streamlit as st
 from PIL import Image
 
 
-# Set the page config
+
+# Set the logo (page config is set in each page script)
 logo = Image.open('./assets/logo-only-no-bg.png')
-st.set_page_config(page_title="GenLingo", layout="centered", page_icon=logo)
 
 logo_sidebar_style = """<style>
     img[data-testid="stLogo"] {
